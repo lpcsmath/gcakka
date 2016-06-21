@@ -1,6 +1,6 @@
 # gcakka
 
-A graph coloring solution provider based on simmulated annealing implemented
+A graph coloring solution provider based on simulated annealing implemented
 with Scala and Akka.
 
 
