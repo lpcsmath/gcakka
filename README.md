@@ -50,9 +50,9 @@ possible to search for the minimum in different places of the solution space.
 By increasing the number of evaluators it is possible to parallelize the
 evaluation of solutions. The following parameters can be changed in the file
 application.conf.
-- numSolvers (number of actors which generate solutions)
-- numEvaluators (number of evaluators to parallelize the evaluation of a
-    solution)
+- numSolvers - number of actors which generate solutions
+- numEvaluators - number of evaluators (per solver) to parallelize the
+    evaluation of a solution
 
 It is possible to create those actors on remote actor systems, such that scaling
 is just a matter of changing a configuration file. There are two applications.
