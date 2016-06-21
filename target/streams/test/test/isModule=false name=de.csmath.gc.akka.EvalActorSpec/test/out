@@ -1,0 +1,5 @@
+[0m[[0minfo[0m] [0m[32mEvalActorSpec:[0m[0m
+[0m[[0minfo[0m] [0m[32mAn EvalActor[0m[0m
+[0m[[0minfo[0m] [0m[32m- must send back an empty set and zero, when uninitialized[0m[0m
+[0m[[0minfo[0m] [0m[32m- must send back confilcts, when there are[0m[0m
+[0m[[0minfo[0m] [0m[32m- must send back an empty set and zero, if there are no conflicts[0m[0m

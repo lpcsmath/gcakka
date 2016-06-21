@@ -1,0 +1,13 @@
+[0m[[0minfo[0m] [0m[32mGCSerializerSpec:[0m[0m
+[0m[[0minfo[0m] [0m[32mA GCSerializer[0m[0m
+[0m[[0minfo[0m] [0m[32m- should serialize a GCGraph[0m[0m
+[0m[[0minfo[0m] [0m[32mA GCSerializer[0m[0m
+[0m[[0minfo[0m] [0m[32m- should serialize a GCSolution[0m[0m
+[0m[[0minfo[0m] [0m[32mA GCSerializer[0m[0m
+[0m[[0minfo[0m] [0m[32m- should serialize a PSAConfig[0m[0m
+[0m[[0minfo[0m] [0m[32mA GCSerializer[0m[0m
+[0m[[0minfo[0m] [0m[32m- should serialize a EvalActor.Edges[0m[0m
+[0m[[0minfo[0m] [0m[32mA GCSerializer[0m[0m
+[0m[[0minfo[0m] [0m[32m- should serialize a EvalActor.Solution[0m[0m
+[0m[[0minfo[0m] [0m[32mA GCSerializer[0m[0m
+[0m[[0minfo[0m] [0m[32m- should serialize a EvalActor.EvalResult[0m[0m
