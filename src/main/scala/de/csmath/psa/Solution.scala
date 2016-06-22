@@ -27,10 +27,6 @@ abstract class Solution extends Ordered[Solution] {
      *  @return -1 if this solution is better than that, 0 if both solutions
      *          are considered equal and 1 if that solution is better.
      */
-    def compare(that: Solution) = (this.costs - that.costs) match {
-        case x if (x == 0) => 0
-        case x if (x > 0)  => 1
-        case x if (x < 0)  => -1
-    }
+    def compare(that: Solution) = this.costs.compare(that.costs)
 
 }
