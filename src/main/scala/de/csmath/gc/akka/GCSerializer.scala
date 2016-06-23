@@ -1,5 +1,6 @@
 package de.csmath.gc.akka
 
+import java.nio._
 import scala.math._
 import scala.annotation.tailrec
 import akka.actor.{ ActorRef, ActorSystem }
@@ -15,12 +16,6 @@ import de.csmath.gc.akka._
  *  A serializer to serialize the messages to remote actors.
  */
 class GCSerializer extends Serializer {
-
-    /**
-     *  A precission factor for serialized floating point values, which
-     *  are serialized as integers.
-     */
-    val prec = 10000
 
     /**
      *  The serializer doesn't need a class manifest.
@@ -53,10 +48,10 @@ class GCSerializer extends Serializer {
             (GCMsgType.PSAConfig.id.toByte ::
                 stringToBinary(con.inFileName) :::
                 stringToBinary(con.outFileName) :::
-                longToBinary(round(con.startTemp * prec)) :::
-                longToBinary(round(con.endTemp * prec)) :::
+                doubleToBinary(con.startTemp) :::
+                doubleToBinary(con.endTemp) :::
                 intToBinary(con.numIter) :::
-                longToBinary(round(con.coolingRate * prec))).toArray
+                doubleToBinary(con.coolingRate)).toArray
         case EvalActor.Edges(el) =>
             (GCMsgType.EA_Edges.id.toByte :: edgeListToBinary(el)).toArray
         case EvalActor.Solution(ca) =>
@@ -88,12 +83,12 @@ class GCSerializer extends Serializer {
             case GCMsgType.PSAConfig =>
                 val (pos1,inFileName) = stringFromBinary(bytes,1)
                 val (pos2,outFileName) = stringFromBinary(bytes,pos1)
-                val (pos3,startTemp) = longFromBinary(bytes,pos2)
-                val (pos4,endTemp) = longFromBinary(bytes,pos3)
+                val (pos3,startTemp) = doubleFromBinary(bytes,pos2)
+                val (pos4,endTemp) = doubleFromBinary(bytes,pos3)
                 val (pos5,numIter) = intFromBinary(bytes,pos4)
-                val (_,coolingRate) = longFromBinary(bytes,pos5)
-                new PSAConfig(inFileName,outFileName,startTemp/prec.toDouble,
-                              endTemp/prec.toDouble,numIter,coolingRate/prec.toDouble)
+                val (_,coolingRate) = doubleFromBinary(bytes,pos5)
+                new PSAConfig(inFileName,outFileName,startTemp,
+                              endTemp,numIter,coolingRate)
             case GCMsgType.EA_Edges =>
                 val (_,el) = edgeListFromBinary(bytes,1)
                 EvalActor.Edges(el)
@@ -471,6 +466,34 @@ class GCSerializer extends Serializer {
         val (pos1,length) = intFromBinary(ar,pos)
         val str = new String(ar.slice(pos1, pos1 + length), "utf-8")
         (pos1 + length,str)
+    }
+
+
+    /**
+     *  A serialized Double value.
+     *  @param d The Double value, which needs to be serialized.
+     *  @return A byte list.
+     */
+    def doubleToBinary(d: Double) = {
+        val ba = new Array[Byte](8)
+        ByteBuffer.wrap(ba).putDouble(d)
+        ba.toList
+    }
+
+
+    /**
+     *  A pair (p,d), where p is the position of data which follows the
+     *  serialized Double and d is the deserialized Double value.
+     *  @param ar  The byte array which contains the serialized Double.
+     *  @param pos The position of the serialized Double within the array.
+     *  @return A pair (p,d), such that p is the position of data which follows
+     *          the serialized Double and d is the deserialized Double value.
+     */
+    def doubleFromBinary(ar: Array[Byte], pos: Int) = {
+        val pos1 = pos + 8
+        val slice = ar.slice(pos,pos1)
+        val d = ByteBuffer.wrap(slice).getDouble()
+        (pos1,d)
     }
 
 }
