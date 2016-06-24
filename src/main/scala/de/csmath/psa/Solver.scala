@@ -67,17 +67,15 @@ abstract class Solver(conf: PSAConfig) {
      *  @return A computed solution.
      */
     @tailrec
-    private def solveaux(temp: Double,iter: Int,sol: Solution)(implicit rand: Random = rd): Solution = {
-        val devSol = eval.evaluate(sol.deviate(rand))
-        val newSol = if (accept(sol,devSol,temp)) devSol else sol
-        iter match {
-            case 0 =>
-                val newTemp = coolDown(temp)
-                if (newTemp < endTemp) newSol else solveaux(newTemp,numIter,newSol)
-            case _ =>
-                solveaux(temp,iter - 1, newSol)
+    private def solveaux(temp: Double,iter: Int,sol: Solution)(implicit rand: Random = rd): Solution =
+        if (temp < endTemp) sol
+        else if (iter == 0)
+            solveaux(coolDown(temp),numIter,sol)
+        else {
+            val devSol = eval.evaluate(sol.deviate(rand))
+            val newSol = if (accept(sol,devSol,temp)) devSol else sol
+            solveaux(temp,iter - 1, newSol)
         }
-    }
 
 
     /**
