@@ -35,30 +35,18 @@ class GCSerializer extends Serializer {
      */
     def toBinary(obj: AnyRef): Array[Byte] = obj match {
         case graph: GCGraph =>
-            (GCMsgType.GCGraph.id.toByte ::
-                intToBinary(graph.numVertices) :::
-                edgeListToBinary(graph.edges)).toArray
+            gcgraphToBinary(graph)
         case sol: GCSolution =>
-            (GCMsgType.GCSolution.id.toByte ::
-                intListToBinary(sol.colAssign) :::
-                intListToBinary(sol.confNodes) :::
-                longToBinary(sol.costs.toLong) :::
-                iPairListToBinary(sol.colUsage.toList)).toArray
+            gcsolutionToBinary(sol)
         case con: PSAConfig =>
-            (GCMsgType.PSAConfig.id.toByte ::
-                stringToBinary(con.inFileName) :::
-                stringToBinary(con.outFileName) :::
-                doubleToBinary(con.startTemp) :::
-                doubleToBinary(con.endTemp) :::
-                intToBinary(con.numIter) :::
-                doubleToBinary(con.coolingRate)).toArray
+            psaconfigToBinary(con)
         case EvalActor.Edges(el) =>
-            (GCMsgType.EA_Edges.id.toByte :: edgeListToBinary(el)).toArray
+            (GCMsgType.EA_Edges.id.toByte :: edgeListToBinList(el)).toArray
         case EvalActor.Solution(ca) =>
-            (GCMsgType.EA_Solution.id.toByte :: intListToBinary(ca)).toArray
+            (GCMsgType.EA_Solution.id.toByte :: intListToBinList(ca)).toArray
         case EvalActor.EvalResult(confNodes,numEdges) =>
-            (GCMsgType.EA_Result.id.toByte :: intListToBinary(confNodes) :::
-                intToBinary(numEdges)).toArray
+            (GCMsgType.EA_Result.id.toByte :: intListToBinList(confNodes) :::
+                intToBinList(numEdges)).toArray
     }
 
 
@@ -70,25 +58,11 @@ class GCSerializer extends Serializer {
     def fromBinary(bytes: Array[Byte],clazz: Option[Class[_]]): AnyRef =
         GCMsgType(bytes(0)) match {
             case GCMsgType.GCGraph =>
-                val (pos1,numVertices) = intFromBinary(bytes,1)
-                val (_,edges) = edgeListFromBinary(bytes,pos1)
-                GCGraph(numVertices,edges)
+                gcgraphFromBinary(bytes)
             case GCMsgType.GCSolution =>
-                val (pos1,colAssign) = intListFromBinary(bytes,1)
-                val (pos2,confNodes) = intListFromBinary(bytes,pos1)
-                val (pos3,costs)     = longFromBinary(bytes,pos2)
-                val (_,colUsage)     = iPairListFromBinary(bytes,pos3)
-                GCSolution(Vector() ++ colAssign, Set() ++ confNodes,
-                    costs.toDouble, Map() ++ colUsage)
+                gcsolutionFromBinary(bytes)
             case GCMsgType.PSAConfig =>
-                val (pos1,inFileName) = stringFromBinary(bytes,1)
-                val (pos2,outFileName) = stringFromBinary(bytes,pos1)
-                val (pos3,startTemp) = doubleFromBinary(bytes,pos2)
-                val (pos4,endTemp) = doubleFromBinary(bytes,pos3)
-                val (pos5,numIter) = intFromBinary(bytes,pos4)
-                val (_,coolingRate) = doubleFromBinary(bytes,pos5)
-                new PSAConfig(inFileName,outFileName,startTemp,
-                              endTemp,numIter,coolingRate)
+                psaconfigFromBinary(bytes)
             case GCMsgType.EA_Edges =>
                 val (_,el) = edgeListFromBinary(bytes,1)
                 EvalActor.Edges(el)
@@ -104,11 +78,95 @@ class GCSerializer extends Serializer {
 
 
     /**
+     *  A serialized graph
+     *  @param graph A graph.
+     *  @return The serialized graph.
+     */
+    def gcgraphToBinary(graph: GCGraph) =
+        (GCMsgType.GCGraph.id.toByte ::
+            intToBinList(graph.numVertices) :::
+            edgeListToBinList(graph.edges)).toArray
+
+
+    /**
+     *  A serialized solution.
+     *  @param sol A solution.
+     *  @return The serialized solution.
+     */
+    def gcsolutionToBinary(sol: GCSolution) =
+        (GCMsgType.GCSolution.id.toByte ::
+            intListToBinList(sol.colAssign) :::
+            intListToBinList(sol.confNodes) :::
+            longToBinList(sol.costs.toLong) :::
+            iPairListToBinList(sol.colUsage.toList)).toArray
+
+
+    /**
+     *  A serialized configuration object.
+     *  @param con A configuration object.
+     *  @return The serialized configuration object.
+     */
+    def psaconfigToBinary(con: PSAConfig) =
+        (GCMsgType.PSAConfig.id.toByte ::
+            stringToBinList(con.inFileName) :::
+            stringToBinList(con.outFileName) :::
+            doubleToBinList(con.startTemp) :::
+            doubleToBinList(con.endTemp) :::
+            intToBinList(con.numIter) :::
+            doubleToBinList(con.coolingRate)).toArray
+
+
+    /**
+     *  A graph.
+     *  @param bytes A byte array with a serialized graph.
+     *  @return The deserialized graph.
+     */
+    def gcgraphFromBinary(bytes: Array[Byte]) = {
+        val (pos1,numVertices) = intFromBinary(bytes,1)
+        val (_,edges) = edgeListFromBinary(bytes,pos1)
+        GCGraph(numVertices,edges)
+    }
+
+
+    /**
+     *  A solution.
+     *  @param bytes A byte array with a serialized graph.
+     *  @return The deserialized solution.
+     */
+    def gcsolutionFromBinary(bytes: Array[Byte]) = {
+        val (pos1,colAssign) = intListFromBinary(bytes,1)
+        val (pos2,confNodes) = intListFromBinary(bytes,pos1)
+        val (pos3,costs)     = longFromBinary(bytes,pos2)
+        val (_,colUsage)     = iPairListFromBinary(bytes,pos3)
+        GCSolution(Vector() ++ colAssign, Set() ++ confNodes,
+            costs.toDouble, Map() ++ colUsage)
+    }
+
+
+    /**
+     *  A configuration object.
+     *  @param bytes A byte array with a serialized graph.
+     *  @return The deserialized configuration object.
+     */
+    def psaconfigFromBinary(bytes: Array[Byte]) = {
+        val (pos1,inFileName) = stringFromBinary(bytes,1)
+        val (pos2,outFileName) = stringFromBinary(bytes,pos1)
+        val (pos3,startTemp) = doubleFromBinary(bytes,pos2)
+        val (pos4,endTemp) = doubleFromBinary(bytes,pos3)
+        val (pos5,numIter) = intFromBinary(bytes,pos4)
+        val (_,coolingRate) = doubleFromBinary(bytes,pos5)
+        new PSAConfig(inFileName,outFileName,startTemp,
+                      endTemp,numIter,coolingRate)
+    }
+
+
+
+    /**
      *  A serialized integer.
      *  @param num The integer, which needs to be serialized.
      *  @return A byte list.
      */
-    def intToBinary(num: Int) = intToBinaryAux(num, 4)
+    def intToBinList(num: Int) = intToBinListAux(num, 4)
 
 
     /**
@@ -117,9 +175,9 @@ class GCSerializer extends Serializer {
      *  @param i   The number of the byte from MSB ot LSB.
      *  @return A byte list.
      */
-    def intToBinaryAux(num: Int, i: Int): List[Byte] = i match {
+    def intToBinListAux(num: Int, i: Int): List[Byte] = i match {
         case 0 => List[Byte]()
-        case x => (num & 255).toByte :: intToBinaryAux(num >> 8, x - 1)
+        case x => (num & 255).toByte :: intToBinListAux(num >> 8, x - 1)
     }
 
 
@@ -158,7 +216,7 @@ class GCSerializer extends Serializer {
      *  @param num The integer, which needs to be serialized.
      *  @return A byte list.
      */
-    def longToBinary(num: Long) = longToBinaryAux(num, 8)
+    def longToBinList(num: Long) = longToBinListAux(num, 8)
 
 
     /**
@@ -167,9 +225,9 @@ class GCSerializer extends Serializer {
      *  @param i   The number of the byte from MSB ot LSB.
      *  @return A byte list.
      */
-    def longToBinaryAux(num: Long, i: Int): List[Byte] = i match {
+    def longToBinListAux(num: Long, i: Int): List[Byte] = i match {
         case 0 => List[Byte]()
-        case x => (num & 255).toByte :: longToBinaryAux(num >> 8, x - 1)
+        case x => (num & 255).toByte :: longToBinListAux(num >> 8, x - 1)
     }
 
 
@@ -209,8 +267,8 @@ class GCSerializer extends Serializer {
      *  @return A list of bytes prefixed by the length of
      *          the list as a serialized integer.
      */
-    def intListToBinary(li: Traversable[Int]) =
-        intListToBinaryAux(li,List[Byte](),0)
+    def intListToBinList(li: Traversable[Int]) =
+        intListToBinListAux(li,List[Byte](),0)
 
 
     /**
@@ -222,11 +280,11 @@ class GCSerializer extends Serializer {
      *          the list as a serialized integer.
      */
     @tailrec
-    private def intListToBinaryAux(li: Traversable[Int], acc: List[Byte], length: Int): List[Byte] =
+    private def intListToBinListAux(li: Traversable[Int], acc: List[Byte], length: Int): List[Byte] =
         li match {
-            case l if (l.isEmpty) => intToBinary(length) ::: acc
+            case l if (l.isEmpty) => intToBinList(length) ::: acc
             case l =>
-                intListToBinaryAux(li.tail,intToBinary(l.head) ::: acc, length + 1)
+                intListToBinListAux(li.tail,intToBinList(l.head) ::: acc, length + 1)
     }
 
 
@@ -273,7 +331,7 @@ class GCSerializer extends Serializer {
      */
     def iPairToBinary(pair: (Int,Int)) = {
         val (x,y) = pair
-        intToBinary(x) ::: intToBinary(y)
+        intToBinList(x) ::: intToBinList(y)
     }
 
 
@@ -299,8 +357,8 @@ class GCSerializer extends Serializer {
      *  @return The byte list containing the serialized list of integer pairs,
      *          prefixed by the length of the list as serialized integer.
      */
-    def iPairListToBinary(pl: List[(Int,Int)]): List[Byte] =
-        iPairListToBinaryAux(pl,List[Byte](),0)
+    def iPairListToBinList(pl: List[(Int,Int)]): List[Byte] =
+        iPairListToBinListAux(pl,List[Byte](),0)
 
 
     /**
@@ -312,11 +370,11 @@ class GCSerializer extends Serializer {
      *          prefixed by the length of the list as serialized integer pairs.
      */
     @tailrec
-    private def iPairListToBinaryAux(pl: List[(Int,Int)], acc: List[Byte], length: Int): List[Byte] =
+    private def iPairListToBinListAux(pl: List[(Int,Int)], acc: List[Byte], length: Int): List[Byte] =
         pl match {
-            case Nil => intToBinary(length) ::: acc
+            case Nil => intToBinList(length) ::: acc
             case ((x,y)::xs) =>
-                iPairListToBinaryAux(xs, iPairToBinary((x,y)) ::: acc, length + 1)
+                iPairListToBinListAux(xs, iPairToBinary((x,y)) ::: acc, length + 1)
     }
 
 
@@ -362,8 +420,8 @@ class GCSerializer extends Serializer {
      *  @param el The list of edges, which need to be serialized.
      *  @return The list of bytes containing the serialized list of edges.
      */
-    def edgeListToBinary(el: List[Edge]): List[Byte] =
-        edgeListToBinaryAux(el,List[Byte](),0)
+    def edgeListToBinList(el: List[Edge]): List[Byte] =
+        edgeListToBinListAux(el,List[Byte](),0)
 
 
     /**
@@ -375,11 +433,11 @@ class GCSerializer extends Serializer {
      *          prefixed with the number of edges.
      */
     @tailrec
-    private def edgeListToBinaryAux(el: List[Edge], acc: List[Byte], length: Int): List[Byte] =
+    private def edgeListToBinListAux(el: List[Edge], acc: List[Byte], length: Int): List[Byte] =
         el match {
-            case Nil => intToBinary(length) ::: acc
+            case Nil => intToBinList(length) ::: acc
             case (Edge(v1,v2)::xs) =>
-                edgeListToBinaryAux(xs, iPairToBinary((v1,v2)) ::: acc, length + 1)
+                edgeListToBinListAux(xs, iPairToBinary((v1,v2)) ::: acc, length + 1)
     }
 
 
@@ -424,7 +482,7 @@ class GCSerializer extends Serializer {
      *  @param m The map, which needs to be serialized.
      *  @return The list of bytes containing the serialized map.
      */
-    def mapToBinary(m: Map[Int,Int]) = iPairListToBinary(m.toList)
+    def mapToBinary(m: Map[Int,Int]) = iPairListToBinList(m.toList)
 
 
     /**
@@ -448,9 +506,9 @@ class GCSerializer extends Serializer {
      *  @return A list of bytes prefixed with the number of bytes containing
      *          the string information.
      */
-    def stringToBinary(str: String) = {
+    def stringToBinList(str: String) = {
         val bytes = str.getBytes
-        intToBinary(bytes.length) ::: bytes.toList
+        intToBinList(bytes.length) ::: bytes.toList
     }
 
 
@@ -474,7 +532,7 @@ class GCSerializer extends Serializer {
      *  @param d The Double value, which needs to be serialized.
      *  @return A byte list.
      */
-    def doubleToBinary(d: Double) = {
+    def doubleToBinList(d: Double) = {
         val ba = new Array[Byte](8)
         ByteBuffer.wrap(ba).putDouble(d)
         ba.toList
