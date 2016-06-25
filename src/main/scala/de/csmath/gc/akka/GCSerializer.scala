@@ -35,18 +35,17 @@ class GCSerializer extends Serializer {
      */
     def toBinary(obj: AnyRef): Array[Byte] = obj match {
         case graph: GCGraph =>
-            gcgraphToBinary(graph)
+            gcGraphToBinary(graph)
         case sol: GCSolution =>
-            gcsolutionToBinary(sol)
+            gcSolutionToBinary(sol)
         case con: PSAConfig =>
-            psaconfigToBinary(con)
-        case EvalActor.Edges(el) =>
-            (GCMsgType.EA_Edges.id.toByte :: edgeListToBinList(el)).toArray
-        case EvalActor.Solution(ca) =>
-            (GCMsgType.EA_Solution.id.toByte :: intListToBinList(ca)).toArray
-        case EvalActor.EvalResult(confNodes,numEdges) =>
-            (GCMsgType.EA_Result.id.toByte :: intListToBinList(confNodes) :::
-                intToBinList(numEdges)).toArray
+            psaConfigToBinary(con)
+        case edges: EvalActor.Edges =>
+            eaEdgesToBinary(edges)
+        case sol: EvalActor.Solution =>
+            eaSolutionToBinary(sol)
+        case res: EvalActor.EvalResult =>
+            eaResultToBinary(res)
     }
 
 
@@ -58,21 +57,17 @@ class GCSerializer extends Serializer {
     def fromBinary(bytes: Array[Byte],clazz: Option[Class[_]]): AnyRef =
         GCMsgType(bytes(0)) match {
             case GCMsgType.GCGraph =>
-                gcgraphFromBinary(bytes)
+                gcGraphFromBinary(bytes)
             case GCMsgType.GCSolution =>
-                gcsolutionFromBinary(bytes)
+                gcSolutionFromBinary(bytes)
             case GCMsgType.PSAConfig =>
-                psaconfigFromBinary(bytes)
+                psaConfigFromBinary(bytes)
             case GCMsgType.EA_Edges =>
-                val (_,el) = edgeListFromBinary(bytes,1)
-                EvalActor.Edges(el)
+                eaEdgesFromBinary(bytes)
             case GCMsgType.EA_Solution =>
-                val (_,ca) = intListFromBinary(bytes,1)
-                EvalActor.Solution(Vector() ++ ca)
+                eaSolutionFromBinary(bytes)
             case GCMsgType.EA_Result =>
-                val (pos1,cn) = intListFromBinary(bytes,1)
-                val (_,ne) = intFromBinary(bytes,pos1)
-                EvalActor.EvalResult(Set() ++ cn, ne)
+                eaResultFromBinary(bytes)
             case _ => ???
     }
 
@@ -82,7 +77,7 @@ class GCSerializer extends Serializer {
      *  @param graph A graph.
      *  @return The serialized graph.
      */
-    def gcgraphToBinary(graph: GCGraph) =
+    def gcGraphToBinary(graph: GCGraph) =
         (GCMsgType.GCGraph.id.toByte ::
             intToBinList(graph.numVertices) :::
             edgeListToBinList(graph.edges)).toArray
@@ -93,7 +88,7 @@ class GCSerializer extends Serializer {
      *  @param sol A solution.
      *  @return The serialized solution.
      */
-    def gcsolutionToBinary(sol: GCSolution) =
+    def gcSolutionToBinary(sol: GCSolution) =
         (GCMsgType.GCSolution.id.toByte ::
             intListToBinList(sol.colAssign) :::
             intListToBinList(sol.confNodes) :::
@@ -106,7 +101,7 @@ class GCSerializer extends Serializer {
      *  @param con A configuration object.
      *  @return The serialized configuration object.
      */
-    def psaconfigToBinary(con: PSAConfig) =
+    def psaConfigToBinary(con: PSAConfig) =
         (GCMsgType.PSAConfig.id.toByte ::
             stringToBinList(con.inFileName) :::
             stringToBinList(con.outFileName) :::
@@ -117,11 +112,45 @@ class GCSerializer extends Serializer {
 
 
     /**
+     *  A serialized edge message for EvalActor.
+     *  @param edges An edge message.
+     *  @return The serialized edge message.
+     */
+    def eaEdgesToBinary(edges: EvalActor.Edges) = {
+        val EvalActor.Edges(el) = edges
+        (GCMsgType.EA_Edges.id.toByte :: edgeListToBinList(el)).toArray
+    }
+
+
+    /**
+     *  A serialized solution message for EvalActor.
+     *  @param sol A solution message.
+     *  @return The serialized solution message.
+     */
+    def eaSolutionToBinary(sol: EvalActor.Solution) = {
+        val EvalActor.Solution(ca) = sol
+        (GCMsgType.EA_Solution.id.toByte :: intListToBinList(ca)).toArray
+    }
+
+
+    /**
+     *  A serialized result message for EvalActor.
+     *  @param sol A result message.
+     *  @return The serialized result message.
+     */
+    def eaResultToBinary(res: EvalActor.EvalResult) = {
+        val EvalActor.EvalResult(confNodes,numEdges) = res
+        (GCMsgType.EA_Result.id.toByte :: intListToBinList(confNodes) :::
+                                          intToBinList(numEdges)).toArray
+    }
+
+
+    /**
      *  A graph.
      *  @param bytes A byte array with a serialized graph.
      *  @return The deserialized graph.
      */
-    def gcgraphFromBinary(bytes: Array[Byte]) = {
+    def gcGraphFromBinary(bytes: Array[Byte]) = {
         val (pos1,numVertices) = intFromBinary(bytes,1)
         val (_,edges) = edgeListFromBinary(bytes,pos1)
         GCGraph(numVertices,edges)
@@ -133,7 +162,7 @@ class GCSerializer extends Serializer {
      *  @param bytes A byte array with a serialized graph.
      *  @return The deserialized solution.
      */
-    def gcsolutionFromBinary(bytes: Array[Byte]) = {
+    def gcSolutionFromBinary(bytes: Array[Byte]) = {
         val (pos1,colAssign) = intListFromBinary(bytes,1)
         val (pos2,confNodes) = intListFromBinary(bytes,pos1)
         val (pos3,costs)     = longFromBinary(bytes,pos2)
@@ -148,7 +177,7 @@ class GCSerializer extends Serializer {
      *  @param bytes A byte array with a serialized graph.
      *  @return The deserialized configuration object.
      */
-    def psaconfigFromBinary(bytes: Array[Byte]) = {
+    def psaConfigFromBinary(bytes: Array[Byte]) = {
         val (pos1,inFileName) = stringFromBinary(bytes,1)
         val (pos2,outFileName) = stringFromBinary(bytes,pos1)
         val (pos3,startTemp) = doubleFromBinary(bytes,pos2)
@@ -159,6 +188,39 @@ class GCSerializer extends Serializer {
                       endTemp,numIter,coolingRate)
     }
 
+
+    /**
+     *  A edge message for EvalActor.
+     *  @param bytes A byte array with a serialized edge message.
+     *  @return The deserialized edge message.
+     */
+    def eaEdgesFromBinary(bytes: Array[Byte]) = {
+        val (_,el) = edgeListFromBinary(bytes,1)
+        EvalActor.Edges(el)
+    }
+
+
+    /**
+     *  A solution message for EvalActor.
+     *  @param bytes A byte array with a serialized solution message.
+     *  @return The deserialized solution message.
+     */
+    def eaSolutionFromBinary(bytes: Array[Byte]) = {
+        val (_,ca) = intListFromBinary(bytes,1)
+        EvalActor.Solution(Vector() ++ ca)
+    }
+
+
+    /**
+     *  A result message for EvalActor.
+     *  @param bytes A byte array with a serialized result message.
+     *  @return The deserialized result message.
+     */
+    def eaResultFromBinary(bytes: Array[Byte]) = {
+        val (pos1,cn) = intListFromBinary(bytes,1)
+        val (_,ne) = intFromBinary(bytes,pos1)
+        EvalActor.EvalResult(Set() ++ cn, ne)
+    }
 
 
     /**
