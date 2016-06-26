@@ -85,7 +85,7 @@ object GCGraphIO {
      *  @param nline A pair (l,s) where l is a line number and s is a string.
      *  @return true iff the provided line is a comment.
      */
-    def commentLine(nline: LString) = nline._2.startsWith("c")
+    private def commentLine(nline: LString) = nline._2.startsWith("c")
 
 
     /**
@@ -98,7 +98,7 @@ object GCGraphIO {
      *          Here i denotes an iterator of integer pairs combined with the
      *          line number according to the type LIPair and e is an exception.
      */
-    def toPairs(lines: Iterator[LString]): Try[Iterator[LIPair]] = Try {
+    private def toPairs(lines: Iterator[LString]): Try[Iterator[LIPair]] = Try {
         lines filterNot commentLine map toPair map (_.get)
     }
 
@@ -110,7 +110,7 @@ object GCGraphIO {
      *          if the string could not be mapped to a pair of integer,
      *          Failure(e) otherwise.
      */
-    def toPair(nline: LString): Try[LIPair] = {
+    private def toPair(nline: LString): Try[LIPair] = {
         val ProblemLine = """p\s+edge\s+(\d+)\s+(\d+)""".r
         val EdgeLine = """e\s+(\d+)\s+(\d+)""".r
         nline match {
@@ -131,7 +131,7 @@ object GCGraphIO {
      *          a valid graph, Failure(e) otherwise.
      *          Here g denotes a graph and e an exception.
      */
-    def createGraph(pairs: Iterator[LIPair]): Try[GCGraph] = {
+    private def createGraph(pairs: Iterator[LIPair]): Try[GCGraph] = {
         val (_,(numVertices,_)) = pairs.next
         val edges = pairs map { pair =>
             val (lineNo, (v1,v2)) = pair
