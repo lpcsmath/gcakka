@@ -144,7 +144,7 @@ object GCGraphIO {
         Try(edges map { _.get }) match {
             case Success(p) =>
                 val ordering: Ordering[Edge] =
-                    Ordering[(Int,Int)].on { x => val Edge(v1,v2) = x; (v1,v2) }
+                    Ordering[(Int,Int)].on(Edge.unapply(_).get)
                 val edgeSet: Set[Edge] = new TreeSet()(ordering) ++ p
                 Success(GCGraph(numVertices, edgeSet.toList))
             case Failure(x) => Failure(x)
