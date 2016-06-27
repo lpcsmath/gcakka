@@ -28,13 +28,14 @@ the minimum.
 
 ## Simulated Annealing
 
-Simulated annealing is a metaheuristic. It is possible to use this heuristic on
-many other problems, too. In the quest for the minimum it generates, alters
-and evaluates solutions. It accepts worse solutions dependent
-on a temperature. The higher the temperature is the higher the probability to
-accept worse solutions. By cooling down, this probability decreases so that
-eventually only better solutions are accepted. GCAkka provides parameters in
-the file application.conf to control the algorithm of the simulated annealing.
+Simulated annealing is a metaheuristic. It is therefore possible to use this
+heuristic on many other problems, too. In the quest for the minimum costs it
+generates, alters and evaluates solutions. It accepts worse solutions dependent
+on the temperature of that time. The higher the temperature is the higher the
+probability to accept worse solutions. By cooling down, this probability
+decreases so that eventually only better solutions are accepted.
+GCAkka provides parameters in the file application.conf to control the algorithm
+of the simulated annealing.
 - startTemp (a high temperature, e.g. 100.0, 1000.0 or 100000.0)
 - endTemp (a low positive temperature, e.g. 0.1, 0.01 or 0.00001)
 - numIter (number of iterations, meaning the number of generated solution
@@ -54,8 +55,13 @@ application.conf.
 - numEvaluators - number of evaluators (per solver) to parallelize the
     evaluation of a solution
 
+Tests showed that only graphs with a high number of edges benefit from a higher
+number of evaluators. There are too many factors to present actual numbers, but
+it is recommended to start with numEvaluators set to 1 or 2 and increase the
+number of solvers to produce more alternative solutions.
+
 It is possible to create those actors on remote actor systems, such that scaling
 is just a matter of changing a configuration file. There are two applications.
 GCAkka is the main system which reads the input file, starts the algorithm and
-writes the solution into the output file. RemoteAS is an actor system which
-provides the possibility for the main system to create actors on this system.
+writes the solution to the output file. RemoteAS is an actor system which
+provides the possibility for the main system to create actors on it.
