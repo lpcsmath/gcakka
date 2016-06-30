@@ -18,7 +18,7 @@ import de.csmath.psa.Solution
  *                   color i.
  */
 class GCSolution (
-    val colAssign: Vector[Int],
+    val colAssign: immutable.IndexedSeq[Int],
     val confNodes: Set[Int],
     val costs: Double,
     val colUsage: Map[Int,Int]
@@ -110,7 +110,7 @@ class GCSolution (
      *  @return A new map m such that m(i) = j denotes that j vertices are
      *          colored with color i.
      */
-    protected def mkColUsage(colAssign: Vector[Int]) =
+    protected def mkColUsage(colAssign: immutable.IndexedSeq[Int]) =
         GCSolution.mkColUsage(colAssign)
 
 }
@@ -133,7 +133,8 @@ object GCSolution {
      *                   color i.
      *  @return A new solution.
      */
-    def apply(colAssign: Vector[Int],confNodes: Set[Int],costs: Double,colUsage: Map[Int,Int]) =
+    def apply(colAssign: immutable.IndexedSeq[Int],
+              confNodes: Set[Int],costs: Double,colUsage: Map[Int,Int]) =
         new GCSolution(colAssign,confNodes,costs,colUsage)
 
 
@@ -170,7 +171,7 @@ object GCSolution {
      *  @return A new map m such that m(i) = j denotes that j vertices are
      *          colored with color i.
      */
-    protected def mkColUsage(colAssign: Vector[Int]) = {
+    protected def mkColUsage(colAssign: immutable.IndexedSeq[Int]) = {
         val size = colAssign.size
         val colUsage = mutable.Map[Int,Int]()
         for (i <- (0 until size)) {

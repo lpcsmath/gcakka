@@ -1,6 +1,7 @@
 package de.csmath.gc.akka
 
 import scala.annotation.tailrec
+import scala.collection.immutable._
 import akka.actor.{Actor,Props,ActorLogging}
 import de.csmath.graph._
 import de.csmath.gc._
@@ -30,7 +31,7 @@ class EvalActor(val id: String) extends Actor with ActorLogging {
      *                   colAssing(i) = j denotes that vertex i has color j.
      *  @return The pair (c,e).
      */
-    protected def evaluate(colAssign:Vector[Int]) = evalAux(colAssign,edges,Nil,0)
+    protected def evaluate(colAssign:IndexedSeq[Int]) = evalAux(colAssign,edges,Nil,0)
 
 
     /**
@@ -43,7 +44,7 @@ class EvalActor(val id: String) extends Actor with ActorLogging {
      *  @return The pair (c,e).
      */
      @tailrec
-     private def evalAux(ca:Vector[Int],el:List[Edge],cn:List[Int],ne: Int): (List[Int],Int) =
+     private def evalAux(ca:IndexedSeq[Int],el:List[Edge],cn:List[Int],ne: Int): (List[Int],Int) =
          el match {
              case Nil => (cn, ne)
              case Edge(v1,v2) :: es =>
@@ -112,7 +113,7 @@ object EvalActor {
         *  @param colAssign is the color assignment of the solution such that
         *                   colAssing(i) = j denotes that vertex i has color j.
         */
-        case class Solution(colAssign: Vector[Int]) extends Msg
+        case class Solution(colAssign: IndexedSeq[Int]) extends Msg
 
 
         /**
