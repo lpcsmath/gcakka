@@ -19,10 +19,10 @@ object GCAkka {
     def main(args: Array[String]) {
         PSAConfig(args) flatMap {
             GCGraphIO.readFile(_)
-        } map { x =>
-            SolverActor.solve(x._1,x._2)
-        } flatMap {
-            GCGraphIO.writeFile(_)
+        } map { case (graph,config) =>
+            SolverActor.solve(graph,config)
+        } flatMap { case (sol,config) =>
+            GCGraphIO.writeFile(sol,config)
         }
     }
 

@@ -61,12 +61,12 @@ object GCGraphIO {
     /**
      *  This method's side effect is writing the computed solution into a
      *  file in the DIMACS standard.
-     *  @param cs A pair (s,c) where s denotes a computed solution and c is
-     *            the configuration object containing the file name.
+     *  @param solution This denotes a computed solution
+     *  @param config   This denotes the configuration object containing the
+     *                  file name.
      *  @return The provided pair (s,c).
      */
-    def writeFile(cs: (GCSolution,PSAConfig)): Try[(Solution,PSAConfig)] = {
-        val (solution,config) = cs
+    def writeFile(solution: GCSolution, config: PSAConfig): Try[(Solution,PSAConfig)] = {
         val fileName = config.outFileName
         Try {
             Console.withOut(new PrintStream(fileName)) {
